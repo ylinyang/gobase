@@ -5,10 +5,13 @@ import (
 
     "github.com/gin-gonic/gin"
     "github.com/ylnyang/gobase/chapter-03/controller"
+    "github.com/ylnyang/gobase/chapter-03/middlewares"
 )
 
 func main() {
     server := gin.Default()
+    // 所有的请求都需要经过认证才行
+    server.Use(middlewares.MyAuth())
 
     // 1. /ping
     server.GET("/ping", func(c *gin.Context) {
