@@ -9,3 +9,6 @@ gin实践: 路由、CRUD、group、middlewares
 
 ## chapter-04 
 测试：不传入参数则为默认值
+
+## chapter-05 
+一个简单的及时聊天系统
