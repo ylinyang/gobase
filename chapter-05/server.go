@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"sync"
@@ -46,17 +47,32 @@ func (s *server) Start() {
 
 func (s *server) handler(conn net.Conn) {
 	// 实例化上线用户
-	u := NewUser(conn)
-	// 添加用户到map中
-	s.mapLock.Lock()
-	s.onLineMap[u.name] = u
-	s.mapLock.Unlock()
-
+	u := NewUser(conn, s)
+	u.online()
 	// 广播消息
 	s.broadcast(u, "已上线")
-	fmt.Println(u)
+
+	// 接受用户的消息
+	go func() {
+		buf := make([]byte, 4096)
+		for {
+			n, err := conn.Read(buf)
+			if n == 0 {
+				u.offline()
+				return
+			}
+			if err != nil && err != io.EOF {
+				log.Panicln("read error", err)
+				return
+			}
+			// 提取用户的消息
+			msg := string([]byte(buf[:n-1]))
+			u.doMessage(msg)
+		}
+	}()
+
 	// 阻塞
-	//select {}
+	select {}
 }
 
 // 将上线消息写入到message中
@@ -82,4 +98,6 @@ func (s *server) listenMessages() {
 1. server里面新添加两个字段 一个存储在线用户新的(需要有锁的操作)  一个用于广播上线消息的  同时修改start方法
 2. 服务器监听到用户上线了，需要将用添加到map中 同时广播消息给所有的客户端
 3. 通过一个监听所有的message消息的函数 将消息发送给所有的客户端
+
+1. 接收用户的消息 并且广播出去
 */

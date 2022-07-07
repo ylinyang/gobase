@@ -10,6 +10,23 @@ type user struct {
 	addr string
 	ch   chan string // channel接收服务器写入的消息
 	conn net.Conn    // 与服务器的连接信息
+
+	s *server
+}
+
+func NewUser(conn net.Conn, s *server) *user {
+	u := &user{
+		name: conn.RemoteAddr().String(),
+		addr: conn.RemoteAddr().String(),
+		ch:   make(chan string),
+		conn: conn,
+		s:    s,
+	}
+
+	// 启动一个goroutine 从ch中获取服务器发来的信息
+	go u.listerHandler()
+
+	return u
 }
 
 func (u *user) listerHandler() {
@@ -21,16 +38,20 @@ func (u *user) listerHandler() {
 	}
 }
 
-func NewUser(conn net.Conn) *user {
-	u := &user{
-		name: conn.RemoteAddr().String(),
-		addr: conn.RemoteAddr().String(),
-		ch:   make(chan string),
-		conn: conn,
-	}
+func (u *user) online() {
+	// 添加用户到map中
+	u.s.mapLock.Lock()
+	u.s.onLineMap[u.name] = u
+	u.s.mapLock.Unlock()
+}
 
-	// 启动一个goroutine 从ch中获取服务器发来的信息
-	go u.listerHandler()
+func (u *user) offline() {
+	u.s.mapLock.Lock()
+	defer u.s.mapLock.Unlock()
+	u.s.broadcast(u, "下线")
+	delete(u.s.onLineMap, u.name)
+}
 
-	return u
+func (u *user) doMessage(msg string) {
+	u.s.broadcast(u, msg)
 }
