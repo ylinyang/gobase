@@ -12,3 +12,6 @@ gin实践: 路由、CRUD、group、middlewares
 
 ## chapter-05 
 一个简单的及时聊天系统
+
+## chapter-06
+通过华为sdk操作IP地址组
