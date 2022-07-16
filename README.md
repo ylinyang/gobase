@@ -15,3 +15,6 @@ gin实践: 路由、CRUD、group、middlewares
 
 ## chapter-06
 通过华为sdk操作IP地址组
+
+## chapter-07
+cobra简单使用
